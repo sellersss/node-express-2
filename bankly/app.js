@@ -2,8 +2,7 @@
 
 const express = require('express');
 const app = express();
-const ExpressError = require("./helpers/expressError");
-
+const ExpressError = require('./helpers/expressError');
 
 app.use(express.json());
 
@@ -16,7 +15,7 @@ app.use('/users', userRoutes);
 /** 404 handler */
 
 app.use(function(req, res, next) {
-  const err = new ExpressError("Not Found", 404);
+  const err = new ExpressError('Not Found', 404);
 
   // pass the error to the next piece of middleware
   return next(err);
@@ -35,4 +34,5 @@ app.use(function(err, req, res, next) {
 
 module.exports = app;
 
-module.exports = app;
+// FIXES BUG #6
+// module.exports = app;

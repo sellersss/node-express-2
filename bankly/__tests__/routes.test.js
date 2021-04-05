@@ -1,15 +1,15 @@
 // Set ENV VAR to test before we load anything, so our app's config will use
 // testing settings
 
-process.env.NODE_ENV = "test";
+process.env.NODE_ENV = 'test';
 
-const app = require("../app");
-const request = require("supertest");
-const db = require("../db");
-const bcrypt = require("bcrypt");
-const createToken = require("../helpers/createToken");
-const jwt = require("jsonwebtoken");
-const { SECRET_KEY } = require("../config");
+const app = require('../app');
+const request = require('supertest');
+const db = require('../db');
+const bcrypt = require('bcrypt');
+const createToken = require('../helpers/createToken');
+const jwt = require('jsonwebtoken');
+const { SECRET_KEY } = require('../config');
 
 // tokens for our sample users
 const tokens = {};
@@ -22,9 +22,9 @@ beforeEach(async function() {
   }
 
   let sampleUsers = [
-    ["u1", "fn1", "ln1", "email1", "phone1", await _pwd("pwd1"), false],
-    ["u2", "fn2", "ln2", "email2", "phone2", await _pwd("pwd2"), false],
-    ["u3", "fn3", "ln3", "email3", "phone3", await _pwd("pwd3"), true]
+    ['u1', 'fn1', 'ln1', 'email1', 'phone1', await _pwd('pwd1'), false],
+    ['u2', 'fn2', 'ln2', 'email2', 'phone2', await _pwd('pwd2'), false],
+    ['u3', 'fn3', 'ln3', 'email3', 'phone3', await _pwd('pwd3'), true]
   ];
 
   for (let user of sampleUsers) {
@@ -36,36 +36,52 @@ beforeEach(async function() {
   }
 });
 
-describe("POST /auth/register", function() {
-  test("should allow a user to register in", async function() {
+describe('POST /auth/register', function() {
+  test('should allow a user to register in', async function() {
     const response = await request(app)
-      .post("/auth/register")
+      .post('/auth/register')
       .send({
-        username: "new_user",
-        password: "new_password",
-        first_name: "new_first",
-        last_name: "new_last",
-        email: "new@newuser.com",
-        phone: "1233211221"
+        username: 'new_user',
+        password: 'new_password',
+        first_name: 'new_first',
+        last_name: 'new_last',
+        email: 'new@newuser.com',
+        phone: '1233211221',
+        admin: false
       });
     expect(response.statusCode).toBe(201);
     expect(response.body).toEqual({ token: expect.any(String) });
 
+    // TESTS BUG #4
     let { username, admin } = jwt.verify(response.body.token, SECRET_KEY);
-    expect(username).toBe("new_user");
+    expect(username).toBe('new_user');
     expect(admin).toBe(false);
   });
 
-  test("should not allow a user to register with an existing username", async function() {
+  test('should allow admin user registration', async function() {
     const response = await request(app)
-      .post("/auth/register")
+      .post('/auth/register')
       .send({
-        username: "u1",
-        password: "pwd1",
-        first_name: "new_first",
-        last_name: "new_last",
-        email: "new@newuser.com",
-        phone: "1233211221"
+        username: 'admin_user',
+        password: 'admin_password',
+        first_name: 'admin',
+        last_name: 'user',
+        email: 'admin_user@newuser.com',
+        phone: '4047647998',
+        admin: true
+      });
+  });
+
+  test('should not allow a user to register with an existing username', async function() {
+    const response = await request(app)
+      .post('/auth/register')
+      .send({
+        username: 'u1',
+        password: 'pwd1',
+        first_name: 'new_first',
+        last_name: 'new_last',
+        email: 'new@newuser.com',
+        phone: '1233211221'
       });
     expect(response.statusCode).toBe(400);
     expect(response.body).toEqual({
@@ -75,127 +91,155 @@ describe("POST /auth/register", function() {
   });
 });
 
-describe("POST /auth/login", function() {
-  test("should allow a correct username/password to log in", async function() {
+describe('POST /auth/login', function() {
+  test('should allow a correct username/password to log in', async function() {
     const response = await request(app)
-      .post("/auth/login")
+      .post('/auth/login')
       .send({
-        username: "u1",
-        password: "pwd1"
+        username: 'u1',
+        password: 'pwd1'
       });
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual({ token: expect.any(String) });
 
     let { username, admin } = jwt.verify(response.body.token, SECRET_KEY);
-    expect(username).toBe("u1");
+    expect(username).toBe('u1');
     expect(admin).toBe(false);
   });
 });
 
-describe("GET /users", function() {
-  test("should deny access if no token provided", async function() {
-    const response = await request(app).get("/users");
+describe('GET /users', function() {
+  test('should deny access if no token provided', async function() {
+    const response = await request(app).get('/users');
     expect(response.statusCode).toBe(401);
   });
 
-  test("should list all users", async function() {
+  test('should list all users', async function() {
     const response = await request(app)
-      .get("/users")
+      .get('/users')
       .send({ _token: tokens.u1 });
     expect(response.statusCode).toBe(200);
     expect(response.body.users.length).toBe(3);
   });
+
+  // TESTS BUG #2
+  test('should deny access if token signature has been tampered with', async function() {
+    let badToken = tokens.u1.concat('a');
+    console.log('BAD TOKEN: ', badToken);
+    const response = await request(app)
+      .get('/users')
+      .send({ _token: badToken });
+    expect(response.statusCode).toBe(401);
+  });
 });
 
-describe("GET /users/[username]", function() {
-  test("should deny access if no token provided", async function() {
-    const response = await request(app).get("/users/u1");
+describe('GET /users/[username]', function() {
+  test('should deny access if no token provided', async function() {
+    const response = await request(app).get('/users/u1');
     expect(response.statusCode).toBe(401);
   });
 
-  test("should return data on u1", async function() {
+  test('should return data on u1', async function() {
     const response = await request(app)
-      .get("/users/u1")
+      .get('/users/u1')
       .send({ _token: tokens.u1 });
     expect(response.statusCode).toBe(200);
     expect(response.body.user).toEqual({
-      username: "u1",
-      first_name: "fn1",
-      last_name: "ln1",
-      email: "email1",
-      phone: "phone1"
+      username: 'u1',
+      first_name: 'fn1',
+      last_name: 'ln1',
+      email: 'email1',
+      phone: 'phone1',
+      admin: false
     });
   });
 });
 
-describe("PATCH /users/[username]", function() {
-  test("should deny access if no token provided", async function() {
-    const response = await request(app).patch("/users/u1");
+describe('PATCH /users/[username]', function() {
+  test('should deny access if no token provided', async function() {
+    const response = await request(app).patch('/users/u1');
     expect(response.statusCode).toBe(401);
   });
 
-  test("should deny access if not admin/right user", async function() {
+  test('should deny access if not admin/right user', async function() {
     const response = await request(app)
-      .patch("/users/u1")
+      .patch('/users/u1')
       .send({ _token: tokens.u2 }); // wrong user!
     expect(response.statusCode).toBe(401);
   });
 
-  test("should patch data if admin", async function() {
+  test('should patch data if admin', async function() {
     const response = await request(app)
-      .patch("/users/u1")
-      .send({ _token: tokens.u3, first_name: "new-fn1" }); // u3 is admin
+      .patch('/users/u1')
+      .send({ _token: tokens.u3, first_name: 'new-fn1' }); // u3 is admin
     expect(response.statusCode).toBe(200);
     expect(response.body.user).toEqual({
-      username: "u1",
-      first_name: "new-fn1",
-      last_name: "ln1",
-      email: "email1",
-      phone: "phone1",
-      admin: false,
-      password: expect.any(String)
+      username: 'u1',
+      first_name: 'new-fn1',
+      last_name: 'ln1',
+      email: 'email1',
+      phone: 'phone1',
+      admin: false
     });
   });
 
-  test("should disallowing patching not-allowed-fields", async function() {
+  // TESTS BUG #2
+  test('should patch data if correct user', async function() {
     const response = await request(app)
-      .patch("/users/u1")
-      .send({ _token: tokens.u1, admin: true });
-    expect(response.statusCode).toBe(401);
+      .patch('/users/u1')
+      .send({ _token: tokens.u1, first_name: 'Sam' });
+    expect(response.statusCode).toBe(200);
+    expect(response.body.user).toEqual({
+      username: 'u1',
+      first_name: 'Sam',
+      last_name: 'ln1',
+      email: 'email1',
+      phone: 'phone1',
+      admin: false
+    });
   });
 
-  test("should return 404 if cannot find", async function() {
+  // TESTS BUGS #1 & #2
+  test('should not allow additional fields to be changed', async function() {
     const response = await request(app)
-      .patch("/users/not-a-user")
-      .send({ _token: tokens.u3, first_name: "new-fn" }); // u3 is admin
+      .patch('/users/u1')
+      .send({ _token: tokens.u1, admin: true });
+    expect(response.statusCode).toBe(400);
+  });
+
+  test('should return 404 if cannot find', async function() {
+    const response = await request(app)
+      .patch('/users/not-a-user')
+      .send({ _token: tokens.u3, first_name: 'new-fn' }); // u3 is admin
     expect(response.statusCode).toBe(404);
   });
 });
 
-describe("DELETE /users/[username]", function() {
-  test("should deny access if no token provided", async function() {
-    const response = await request(app).delete("/users/u1");
+// TEST BUG #3
+describe('DELETE /users/[username]', function() {
+  test('should deny access if no token provided', async function() {
+    const response = await request(app).delete('/users/u1');
     expect(response.statusCode).toBe(401);
   });
 
-  test("should deny access if not admin", async function() {
+  test('should deny access if not admin', async function() {
     const response = await request(app)
-      .delete("/users/u1")
+      .delete('/users/u1')
       .send({ _token: tokens.u1 });
     expect(response.statusCode).toBe(401);
   });
 
-  test("should allow if admin", async function() {
+  test('should allow if admin', async function() {
     const response = await request(app)
-      .delete("/users/u1")
+      .delete('/users/u1')
       .send({ _token: tokens.u3 }); // u3 is admin
     expect(response.statusCode).toBe(200);
-    expect(response.body).toEqual({ message: "deleted" });
+    expect(response.body).toEqual({ message: 'deleted' });
   });
 });
 
 afterEach(async function() {
-  await db.query("DELETE FROM users");
+  await db.query('DELETE FROM users');
 });
 
 afterAll(function() {

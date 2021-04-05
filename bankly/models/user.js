@@ -2,13 +2,20 @@ const bcrypt = require('bcrypt');
 const db = require('../db');
 const ExpressError = require('../helpers/expressError');
 const sqlForPartialUpdate = require('../helpers/partialUpdate');
-const { BCRYPT_WORK_FACTOR } = require("../config");
+const { BCRYPT_WORK_FACTOR } = require('../config');
 
 class User {
+  /** Register user with data. Returns new user data. */
 
-/** Register user with data. Returns new user data. */
-
-  static async register({username, password, first_name, last_name, email, phone}) {
+  static async register({
+    username,
+    password,
+    first_name,
+    last_name,
+    email,
+    phone,
+    admin // FIXES BUG #5
+  }) {
     const duplicateCheck = await db.query(
       `SELECT username 
         FROM users 
@@ -25,24 +32,19 @@ class User {
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
+    // FIXES BUG #5
     const result = await db.query(
       `INSERT INTO users 
-          (username, password, first_name, last_name, email, phone) 
-        VALUES ($1, $2, $3, $4, $5, $6) 
-        RETURNING username, password, first_name, last_name, email, phone`,
-      [
-        username,
-        hashedPassword,
-        first_name,
-        last_name,
-        email,
-        phone
-      ]
+          (username, password, first_name, last_name, email, phone, admin) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7) 
+        RETURNING username, password, first_name, last_name, email, phone, admin`,
+      [username, hashedPassword, first_name, last_name, email, phone, admin]
     );
 
+    // FIXES BUG #9
+    delete result.password;
     return result.rows[0];
   }
-
 
   /** Is this username + password combo correct?
    *
@@ -67,6 +69,8 @@ class User {
     const user = result.rows[0];
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      // FIXES BUG #9
+      delete user.password;
       return user;
     } else {
       throw new ExpressError('Cannot authenticate', 401);
@@ -79,13 +83,17 @@ class User {
    *
    * */
 
-  static async getAll(username, password) {
+  // FIXES BUG #7
+  // static async getAll(username, password) {
+  // fixes unused parameters
+  static async getAll() {
     const result = await db.query(
       `SELECT username,
                 first_name,
                 last_name,
                 email,
-                phone
+                phone,
+                admin
             FROM users 
             ORDER BY username`
     );
@@ -97,14 +105,15 @@ class User {
    * If user cannot be found, should raise a 404.
    *
    **/
-
   static async get(username) {
+    // FIXES BUG #5
     const result = await db.query(
       `SELECT username,
                 first_name,
                 last_name,
                 email,
-                phone
+                phone,
+                admin
          FROM users
          WHERE username = $1`,
       [username]
@@ -113,7 +122,8 @@ class User {
     const user = result.rows[0];
 
     if (!user) {
-      new ExpressError('No such user', 404);
+      // FIXES BUG #8
+      throw new ExpressError('No such user', 404);
     }
 
     return user;
@@ -128,6 +138,11 @@ class User {
    **/
 
   static async update(username, data) {
+    // FIXES BUG #5
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, BCRYPT_WORK_FACTOR);
+    }
+
     let { query, values } = sqlForPartialUpdate(
       'users',
       data,
@@ -141,7 +156,8 @@ class User {
     if (!user) {
       throw new ExpressError('No such user', 404);
     }
-
+    // FIXES BUG #9
+    delete user.password;
     return user;
   }
 

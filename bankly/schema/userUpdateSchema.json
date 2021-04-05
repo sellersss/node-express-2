@@ -1,0 +1,61 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/object1617637784.json",
+  "title": "Root",
+  "type": "object",
+  "required": ["_token"],
+  "properties": {
+    "username": {
+      "$id": "#root/username",
+      "title": "username",
+      "type": "string",
+      "default": "",
+      "examples": ["testuser"],
+      "pattern": "^.*$"
+    },
+    "first_name": {
+      "$id": "#root/first_name",
+      "title": "First_name",
+      "type": "string",
+      "default": "",
+      "examples": ["Test"],
+      "pattern": "^.*$"
+    },
+    "last_name": {
+      "$id": "#root/last_name",
+      "title": "Last_name",
+      "type": "string",
+      "default": "",
+      "examples": ["User"],
+      "pattern": "^.*$"
+    },
+    "email": {
+      "$id": "#root/email",
+      "title": "Email",
+      "type": "string",
+      "default": "",
+      "examples": ["test@user.com"],
+      "pattern": "^.*$"
+    },
+    "phone": {
+      "$id": "#root/phone",
+      "title": "Phone",
+      "type": "string",
+      "default": "",
+      "examples": ["610-888-7474"],
+      "pattern": "^.*$"
+    },
+    "_token": {
+      "$id": "#root/_token",
+      "title": "_token",
+      "type": "string",
+      "default": "",
+      "examples": [
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyOSIsImFkbWluIjpmYWxzZSwiaWF0IjoxNjEwNzM3MDk2fQ.cBWY9lHYeTS5fyn2t8kVI2XNXdhLY4r_zbgZMNoOSgs"
+      ],
+      "pattern": "^.*$"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,72 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/object1617638842.json",
+  "title": "Root",
+  "type": "object",
+  "required": [
+    "username",
+    "password",
+    "first_name",
+    "last_name",
+    "email",
+    "phone"
+  ],
+  "properties": {
+    "username": {
+      "$id": "#root/username",
+      "title": "Username",
+      "type": "string",
+      "default": "",
+      "examples": ["testuser"],
+      "pattern": "^.*$"
+    },
+    "password": {
+      "$id": "#root/password",
+      "title": "Password",
+      "type": "string",
+      "default": "",
+      "examples": ["testpassw31ord!"],
+      "pattern": "^.*$"
+    },
+    "first_name": {
+      "$id": "#root/first_name",
+      "title": "First_name",
+      "type": "string",
+      "default": "",
+      "examples": ["Test"],
+      "pattern": "^.*$"
+    },
+    "last_name": {
+      "$id": "#root/last_name",
+      "title": "Last_name",
+      "type": "string",
+      "default": "",
+      "examples": ["User"],
+      "pattern": "^.*$"
+    },
+    "email": {
+      "$id": "#root/email",
+      "title": "Email",
+      "type": "string",
+      "default": "",
+      "examples": ["test@user.com"],
+      "pattern": "^.*$"
+    },
+    "phone": {
+      "$id": "#root/phone",
+      "title": "Phone",
+      "type": "string",
+      "default": "",
+      "examples": ["610-888-7474"],
+      "pattern": "^.*$"
+    },
+    "admin": {
+      "$id": "#root/admin",
+      "title": "admin",
+      "type": "boolean",
+      "default": "false",
+      "examples": [false]
+    }
+  }
+}
